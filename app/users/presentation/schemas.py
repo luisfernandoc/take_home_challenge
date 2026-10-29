@@ -1,6 +1,14 @@
 from typing import Annotated, Self
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, EmailStr, StringConstraints, model_validator
+from pydantic import(
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    SecretStr,
+    StringConstraints,
+    model_validator,
+)
 
 class UserCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -14,6 +22,10 @@ class UserCreate(BaseModel):
         ),
     ]
     email: EmailStr
+    password: SecretStr = Field(
+        min_length=15,
+        max_length=128,
+    )
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
