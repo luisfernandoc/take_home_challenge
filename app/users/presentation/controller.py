@@ -29,6 +29,7 @@ def create_user(
         user = service.create_user(
             name=data.name,
             email=str(data.email),
+            password=data.password.get_secret_value(),
         )
     except EmailAlreadyRegisteredError as error:
         raise HTTPException(

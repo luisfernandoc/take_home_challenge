@@ -1,15 +1,17 @@
 from dataclasses import replace
 from uuid import UUID, uuid4
 
+from app.users.application.password_hasher import PasswordHasher
 from app.users.domain.entities import User
 from app.users.domain.exceptions import EmailAlreadyRegisteredError, UserNotFoundError
 from app.users.domain.repositories import UserRepository
 
 class UserService:
-    def __init__(self, repository: UserRepository) -> None:
+    def __init__(self, repository: UserRepository, password_hasher: PasswordHasher) -> None:
         self._repository = repository
+        self._password_hasher = password_hasher
 
-    def create_user(self, name: str, email: str) -> User:
+    def create_user(self, name: str, email: str, password: str,) -> User:
         existing_user = self._repository.get_by_email(email)
 
         if existing_user is not None:
@@ -17,10 +19,13 @@ class UserService:
                 "Email already registered."
             )
 
+        password_hash = self._password_hasher.hash(password)
+
         user = User(
             id=uuid4(),
             name=name,
             email=email,
+            password_hash=password_hash,
         )
 
         self._repository.save(user)
