@@ -1,5 +1,6 @@
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import AsyncGenerator, Callable, Iterator
 from unittest.mock import Mock
+from contextlib import ExitStack
 import httpx
 import pytest
 
@@ -15,9 +16,18 @@ from app.users.application.pokemon_client import PokemonClient
 from app.users.application.service import UserService
 from app.users.infrastructure.repositories import InMemoryUserRepository
 from app.users.presentation.dependencies import get_user_service
+from app.infrastructure.database import get_db_session
+from app.users.presentation.dependencies import (
+    get_password_hasher,
+    get_pokemon_client,
+)
 from app.users.infrastructure.sqlalchemy_repository import (
     SqlAlchemyUserRepository,
 )
+from app.users.infrastructure.password_hasher import (
+    Argon2PasswordHasher,
+)
+from app.infrastructure.clients.pokeapi_client import PokeApiClient
 from tests.config import get_test_settings
 from tests.database import create_test_engine
 
@@ -134,3 +144,75 @@ def sql_repository(
     db_session: Session,
 ) -> SqlAlchemyUserRepository:
     return SqlAlchemyUserRepository(session=db_session)
+
+@pytest.fixture
+def pokeapi_client_factory() -> Iterator[
+    Callable[
+        [Callable[[httpx.Request], httpx.Response]],
+        PokeApiClient,
+    ]
+]:
+    with ExitStack() as stack:
+        def create_client(
+            handler: Callable[[httpx.Request], httpx.Response],
+        ) -> PokeApiClient:
+            http_client = stack.enter_context(
+                httpx.Client(
+                    base_url="https://pokeapi.test/api/v2/",
+                    timeout=5.0,
+                    transport=httpx.MockTransport(handler),
+                )
+            )
+
+            return PokeApiClient(http_client=http_client)
+
+        yield create_client
+
+@pytest.fixture
+def real_password_hasher() -> Argon2PasswordHasher:
+    return Argon2PasswordHasher()
+
+@pytest.fixture
+def user_payload() -> dict:
+    return {
+        "name": "Ana",
+        "email": "ana@example.com",
+        "password": "password-ficticia-de-prueba",
+        "pokemon_ids": [25],
+    }
+
+@pytest.fixture
+async def sql_client(
+    db_session: Session,
+    pokemon_client: Mock,
+    real_password_hasher: Argon2PasswordHasher,
+) -> AsyncGenerator[httpx.AsyncClient, None]:
+    def override_session() -> Session:
+        return db_session
+
+    def override_pokemon_client():
+        return pokemon_client
+
+    def override_password_hasher():
+        return real_password_hasher
+
+    previous_overrides = app.dependency_overrides.copy()
+    app.dependency_overrides.clear()
+
+    app.dependency_overrides[get_db_session] = override_session
+    app.dependency_overrides[get_pokemon_client] = (
+        override_pokemon_client
+    )
+    app.dependency_overrides[get_password_hasher] = (
+        override_password_hasher
+    )
+
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://test",
+        ) as http_client:
+            yield http_client
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous_overrides)
