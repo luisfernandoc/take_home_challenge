@@ -5,9 +5,16 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import EmailStr
 
 from app.users.application.service import UserService
+from app.users.application.exceptions import PokemonProviderUnavailableError, PokemonNotFoundError
 from app.users.domain.exceptions import EmailAlreadyRegisteredError, UserNotFoundError
 from app.users.presentation.dependencies import get_user_service
-from app.users.presentation.schemas import UserCreate, UserResponse, UserUpdate
+from app.users.presentation.schemas import (
+    UserCreate,
+    UserPokemonsUpdate,
+    UserPokemonsResponse,
+    UserResponse,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -121,3 +128,54 @@ def delete_user(
         ) from error
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@router.put(
+    "/{user_id}/pokemons"
+)
+def set_user_pokemons(
+    user_id: UUID,
+    data: UserPokemonsUpdate,
+    service: UserServiceDependency,
+) -> UserPokemonsResponse:
+    try:
+        names = service.set_user_pokemons(
+            user_id=user_id,
+            pokemon_ids=data.pokemon_ids,
+        )
+    except UserNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except PokemonNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(error),
+        ) from error
+    except PokemonProviderUnavailableError as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(error),
+        ) from error
+
+    return UserPokemonsResponse(pokemons=names)
+
+@router.get("/{user_id}/pokemons", response_model=UserPokemonsResponse)
+def get_user_pokemons(
+    user_id: UUID,
+    service: UserServiceDependency,
+) -> UserPokemonsResponse:
+    try:
+        names = service.get_user_pokemon_names(user_id)
+    except UserNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+    except (PokemonNotFoundError, PokemonProviderUnavailableError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="It was not possible to get the name of the Pokemon(s)",
+        ) from error
+
+    return UserPokemonsResponse(pokemons=names)

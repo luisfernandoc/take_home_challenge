@@ -6,7 +6,9 @@ from pydantic import(
     EmailStr,
     Field,
     SecretStr,
+    StrictInt,
     StringConstraints,
+    field_validator,
     model_validator,
 )
 
@@ -62,3 +64,21 @@ class UserUpdate(BaseModel):
                 )
 
         return self
+
+class UserPokemonsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pokemon_ids: list[
+        Annotated[StrictInt, Field(gt=0)]
+    ] = Field(max_length=100)
+
+    @field_validator("pokemon_ids")
+    @classmethod
+    def validate_unique_ids(cls, value: list[int]) -> list[int]:
+        if len(value) != len(set(value)):
+            raise ValueError("The list can't have repeated IDs")
+
+        return value
+
+class UserPokemonsResponse(BaseModel):
+    pokemons: list[str]

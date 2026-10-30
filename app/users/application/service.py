@@ -2,14 +2,21 @@ from dataclasses import replace
 from uuid import UUID, uuid4
 
 from app.users.application.password_hasher import PasswordHasher
+from app.users.application.pokemon_client import PokemonClient
 from app.users.domain.entities import User
 from app.users.domain.exceptions import EmailAlreadyRegisteredError, UserNotFoundError
 from app.users.domain.repositories import UserRepository
 
 class UserService:
-    def __init__(self, repository: UserRepository, password_hasher: PasswordHasher) -> None:
+    def __init__(
+        self,
+        repository: UserRepository,
+        password_hasher: PasswordHasher,
+        pokemon_client: PokemonClient,
+    ) -> None:
         self._repository = repository
         self._password_hasher = password_hasher
+        self._pokemon_client = pokemon_client
 
     def create_user(self, name: str, email: str, password: str,) -> User:
         existing_user = self._repository.get_by_email(email)
@@ -85,3 +92,42 @@ class UserService:
         self.get_user_by_id(user_id)
 
         self._repository.delete(user_id)
+
+    def set_user_pokemons(
+        self,
+        user_id: UUID,
+        pokemon_ids: list[int],
+    ) -> list[str]:
+        user = self.get_user_by_id(user_id)
+
+        if any(
+            type(pokemon_id) is not int or pokemon_id <= 0 for pokemon_id in pokemon_ids
+        ):
+            raise ValueError(
+                "IDs of the Pokemon should be positive integers"
+            )
+
+        if len(pokemon_ids) != len(set(pokemon_ids)):
+            raise ValueError(
+                "The list of IDs can't contain repeated values"
+            )
+
+        names = [
+            self._pokemon_client.get_name_by_id(pokemon_id) for pokemon_id in pokemon_ids
+        ]
+
+        updated_user = replace(
+            user,
+            pokemon_ids=list(pokemon_ids),  
+        )
+
+        self._repository.update(updated_user)
+
+        return names
+
+    def get_user_pokemon_names(self, user_id: UUID) -> list[str]:
+        user = self.get_user_by_id(user_id)
+
+        return [
+            self._pokemon_client.get_name_by_id(pokemon_id) for pokemon_id in user.pokemon_ids
+        ]
