@@ -7,7 +7,7 @@ from app.infrastructure.database import Base
 
 class UserModel(Base):
     __tablename__ = "users"
-    __tableargs__ = (
+    __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),
     )
 
