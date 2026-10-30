@@ -10,3 +10,4 @@ class User:
         default=None,
         repr=False,
     )
+    pokemon_ids: list[int] = field(default_factory=list)

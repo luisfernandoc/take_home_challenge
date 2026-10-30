@@ -6,9 +6,16 @@ from pydantic import(
     EmailStr,
     Field,
     SecretStr,
+    StrictInt,
     StringConstraints,
+    field_validator,
     model_validator,
 )
+
+PokemonId = Annotated[
+    StrictInt,
+    Field(gt=0),
+]
 
 class UserCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -23,16 +30,32 @@ class UserCreate(BaseModel):
     ]
     email: EmailStr
     password: SecretStr = Field(
-        min_length=15,
+        min_length=4,
         max_length=128,
     )
+    pokemon_ids: list[PokemonId] = Field(
+        default_factory=list,
+        max_length=100,
+    )
+
+    @field_validator("pokemon_ids")
+    @classmethod
+    def validate_unique_pokemon_ids(
+        cls,
+        value: list[int],
+    ) -> list[int]:
+        if len(value) != len(set(value)):
+            raise ValueError(
+                "The list can't have repeated IDs"
+            )
+
+        return value
 
 class UserResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: UUID
     name: str
     email: EmailStr
+    pokemons: list[str]
 
 class UserUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -47,6 +70,24 @@ class UserUpdate(BaseModel):
     ] | None = None
 
     email: EmailStr | None = None
+
+    pokemon_ids: list[PokemonId] | None = Field(
+        default=None,
+        max_length=100,
+    )
+
+    @field_validator("pokemon_ids")
+    @classmethod
+    def validate_unique_pokemon_ids(
+        cls,
+        value: list[int] | None,
+    ) -> list[int] | None:
+        if value is not None and len(value) != len(set(value)):
+            raise ValueError(
+                "La lista no puede contener IDs repetidos"
+            )
+
+        return value
 
     @model_validator(mode="after")
     def validate_changes(self) -> Self:

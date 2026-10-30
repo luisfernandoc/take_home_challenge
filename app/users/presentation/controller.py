@@ -4,10 +4,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import EmailStr
 
+from app.users.application.exceptions import PokemonNotFoundError
+from app.users.application.results import UserResult
 from app.users.application.service import UserService
-from app.users.domain.exceptions import EmailAlreadyRegisteredError, UserNotFoundError
 from app.users.presentation.dependencies import get_user_service
-from app.users.presentation.schemas import UserCreate, UserResponse, UserUpdate
+from app.users.presentation.schemas import (
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -16,6 +22,16 @@ UserServiceDependency = Annotated[
     Depends(get_user_service),
 ]
 
+
+def to_user_response(result: UserResult) -> UserResponse:
+    return UserResponse(
+        id=result.user.id,
+        name=result.user.name,
+        email=result.user.email,
+        pokemons=result.pokemon_names,
+    )
+
+
 @router.post(
     "",
     response_model=UserResponse,
@@ -23,59 +39,52 @@ UserServiceDependency = Annotated[
 )
 def create_user(
     data: UserCreate,
-    service: Annotated[UserService, Depends(get_user_service)],
+    service: UserServiceDependency,
 ) -> UserResponse:
     try:
-        user = service.create_user(
+        result = service.create_user(
             name=data.name,
             email=str(data.email),
             password=data.password.get_secret_value(),
+            pokemon_ids=data.pokemon_ids,
         )
-    except EmailAlreadyRegisteredError as error:
+    except PokemonNotFoundError as error:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=422,
             detail=str(error),
         ) from error
 
-    return UserResponse.model_validate(user)
+    return to_user_response(result)
+
 
 @router.get("", response_model=list[UserResponse])
 def list_users(
-    service: Annotated[UserService, Depends(get_user_service)],
+    service: UserServiceDependency,
 ) -> list[UserResponse]:
-    users = service.list_users()
+    results = service.list_user_results()
 
-    return [UserResponse.model_validate(user) for user in users]
+    return [to_user_response(result) for result in results]
+
 
 @router.get("/by-email", response_model=UserResponse)
 def get_user_by_email(
     email: EmailStr,
-    service: UserServiceDependency,   
+    service: UserServiceDependency,
 ) -> UserResponse:
-    try:
-        user = service.get_user_by_email(str(email))
-    except UserNotFoundError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(error),
-        ) from error
+    result = service.get_user_result_by_email(str(email))
 
-    return UserResponse.model_validate(user)
+    return to_user_response(result)
+
 
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user_by_id(
     user_id: UUID,
-    service: UserServiceDependency,   
+    service: UserServiceDependency,
 ) -> UserResponse:
-    try:
-        user = service.get_user_by_id(user_id)
-    except UserNotFoundError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(error),
-        ) from error
+    result = service.get_user_result_by_id(user_id)
 
-    return UserResponse.model_validate(user)
+    return to_user_response(result)
+
 
 @router.patch("/{user_id}", response_model=UserResponse)
 def update_user(
@@ -84,23 +93,21 @@ def update_user(
     service: UserServiceDependency,
 ) -> UserResponse:
     try:
-        user = service.update_user(
+        result = service.update_user(
             user_id,
             name=data.name,
             email=str(data.email) if data.email is not None else None,
+            pokemon_ids=data.pokemon_ids,
         )
-    except UserNotFoundError as error:
+    except PokemonNotFoundError as error:
+        status_code = 422 if data.pokemon_ids is not None else 502
+
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(error),
-        ) from error
-    except EmailAlreadyRegisteredError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status_code,
             detail=str(error),
         ) from error
 
-    return UserResponse.model_validate(user)
+    return to_user_response(result)
 
 
 @router.delete(
@@ -112,12 +119,6 @@ def delete_user(
     user_id: UUID,
     service: UserServiceDependency,
 ) -> Response:
-    try:
-        service.delete_user(user_id)
-    except UserNotFoundError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(error),
-        ) from error
+    service.delete_user(user_id)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

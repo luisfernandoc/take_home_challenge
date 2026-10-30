@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     postgres_password: SecretStr
     postgres_host: str
     postgres_port: int = Field(ge=1, le=65535)
+    pokeapi_base_url: str
 
 @lru_cache
 def get_settings() -> Settings:
