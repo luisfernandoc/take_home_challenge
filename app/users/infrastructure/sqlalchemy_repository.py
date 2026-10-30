@@ -100,7 +100,7 @@ class SqlAlchemyUserRepository:
 
             if constraint_name == "uq_users_email":
                 raise EmailAlreadyRegisteredError(
-                    "El correo ya está registrado"
+                    "Email already registered"
                 ) from error
 
             raise
