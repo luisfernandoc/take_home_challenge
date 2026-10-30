@@ -1,5 +1,6 @@
 from uuid import UUID
-from sqlalchemy import String, Text, UniqueConstraint, Uuid
+from sqlalchemy import Integer, String, Text, UniqueConstraint, Uuid, text
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.database import Base
@@ -28,4 +29,11 @@ class UserModel(Base):
     password_hash: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+
+    pokemon_ids: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer),
+        nullable=False,
+        default=list,
+        server_default=text("'{}'::integer[]"),
     )

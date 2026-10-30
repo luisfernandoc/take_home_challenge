@@ -22,6 +22,7 @@ class SqlAlchemyUserRepository:
             name=user.name,
             email=user.email,
             password_hash=user.password_hash,
+            pokemon_ids=list(user.pokemon_ids),
         )
 
         self._session.add(model)
@@ -62,6 +63,7 @@ class SqlAlchemyUserRepository:
 
         model.name = user.name
         model.email = user.email
+        model.pokemon_ids = list(user.pokemon_ids)
 
         self._commit()
 
@@ -80,6 +82,7 @@ class SqlAlchemyUserRepository:
             name=model.name,
             email=model.email,
             password_hash=model.password_hash,
+            pokemon_ids=list(model.pokemon_ids),
         )
 
     def _commit(self) -> None:
