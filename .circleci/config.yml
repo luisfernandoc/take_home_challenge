@@ -23,6 +23,12 @@ jobs:
 
     steps:
       - checkout
+      - run:
+        name: Verify loaded configuration
+        command: |
+          echo "RUNNING NATIVE CIRCLECI CONFIG"
+          git rev-parse HEAD
+          ls -l .circleci/config.yml
 
       - run:
           name: Install uv
