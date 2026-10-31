@@ -1,4 +1,5 @@
 # Take Home Challenge
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/XDAqBGGy3hmP1bSiLaNrAs/WziQdkTEG5iipEvmUQMnZa/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/XDAqBGGy3hmP1bSiLaNrAs/WziQdkTEG5iipEvmUQMnZa/tree/main)
 
 API de usuarios construida con Python 3.13 y FastAPI.
 
