@@ -70,8 +70,8 @@ def test_duplicate_email_is_rejected_and_session_remains_usable(
         id=uuid4(),
         name="Otro usuario",
     )
-    print(f'user email: {user.email}')
-    print(f'duplicated email: {duplicate.email}')
+    print(f"user email: {user.email}")
+    print(f"duplicated email: {duplicate.email}")
 
     with pytest.raises(EmailAlreadyRegisteredError):
         sql_repository.save(duplicate)

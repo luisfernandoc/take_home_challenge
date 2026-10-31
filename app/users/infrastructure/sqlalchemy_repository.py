@@ -37,9 +37,7 @@ class SqlAlchemyUserRepository:
         return self._to_entity(model)
 
     def get_by_email(self, email: str) -> User | None:
-        statement = select(UserModel).where(
-            UserModel.email == email
-        )
+        statement = select(UserModel).where(UserModel.email == email)
 
         model = self._session.scalar(statement)
 
@@ -99,8 +97,6 @@ class SqlAlchemyUserRepository:
             )
 
             if constraint_name == "uq_users_email":
-                raise EmailAlreadyRegisteredError(
-                    "Email already registered"
-                ) from error
+                raise EmailAlreadyRegisteredError("Email already registered") from error
 
             raise

@@ -6,7 +6,6 @@ import pytest
 
 import app.main as main_module
 
-
 pytestmark = pytest.mark.anyio
 
 
@@ -43,14 +42,10 @@ async def test_lifespan_creates_and_closes_pokeapi_client(
     )
 
     try:
-        async with main_module.app.router.lifespan_context(
-            main_module.app
-        ):
+        async with main_module.app.router.lifespan_context(main_module.app):
             assert not http_client.is_closed
 
-            pokemon_client = (
-                main_module.app.state.pokemon_client
-            )
+            pokemon_client = main_module.app.state.pokemon_client
 
             assert pokemon_client.get_name_by_id(25) == "pikachu"
             assert pokemon_client.get_name_by_id(25) == "pikachu"

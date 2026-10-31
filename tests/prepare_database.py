@@ -12,24 +12,17 @@ def main() -> None:
 
     try:
         with engine.begin() as connection:
-            database = connection.scalar(
-                text("SELECT current_database()")
-            )
+            database = connection.scalar(text("SELECT current_database()"))
 
             if database != settings.postgres_db:
-                raise RuntimeError(
-                    "La conexión no corresponde a la base de pruebas"
-                )
+                raise RuntimeError("La conexión no corresponde a la base de pruebas")
 
             config = Config("alembic.ini")
             config.attributes["connection"] = connection
 
             command.upgrade(config, "head")
 
-        print(
-            f"Migraciones aplicadas correctamente en "
-            f"{settings.postgres_db}"
-        )
+        print(f"Migraciones aplicadas correctamente en {settings.postgres_db}")
     finally:
         engine.dispose()
 

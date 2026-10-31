@@ -1,6 +1,8 @@
 from uuid import UUID
+
 from app.users.domain.entities import User
 from app.users.domain.exceptions import UserNotFoundError
+
 
 class InMemoryUserRepository:
     def __init__(self) -> None:

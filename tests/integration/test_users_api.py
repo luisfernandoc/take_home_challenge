@@ -11,6 +11,7 @@ from app.users.application.service import UserService
 
 pytestmark = pytest.mark.anyio
 
+
 async def test_create_and_get_user(
     client: httpx.AsyncClient,
 ) -> None:
@@ -38,12 +39,11 @@ async def test_create_and_get_user(
         "pokemons",
     }
 
-    response = await client.get(
-        f"/users/{created['id']}"
-    )
+    response = await client.get(f"/users/{created['id']}")
 
     assert response.status_code == 200
     assert response.json() == created
+
 
 async def test_create_user_rejects_duplicate_pokemon_ids(
     client: httpx.AsyncClient,
@@ -62,15 +62,14 @@ async def test_create_user_rejects_duplicate_pokemon_ids(
     assert response.status_code == 422
     assert service.list_user_results() == []
 
+
 async def test_create_user_returns_502_when_provider_fails(
     client: httpx.AsyncClient,
     pokemon_client: Mock,
     service: UserService,
 ) -> None:
-    pokemon_client.get_name_by_id.side_effect = (
-        PokemonProviderUnavailableError(
-            "Error simulado de PokéAPI"
-        )
+    pokemon_client.get_name_by_id.side_effect = PokemonProviderUnavailableError(
+        "Error simulado de PokéAPI"
     )
 
     response = await client.post(
@@ -84,10 +83,9 @@ async def test_create_user_returns_502_when_provider_fails(
     )
 
     assert response.status_code == 502
-    assert response.json() == {
-        "detail": "No fue posible consultar PokéAPI"
-    }
+    assert response.json() == {"detail": "No fue posible consultar PokéAPI"}
     assert service.list_user_results() == []
+
 
 async def test_patch_user_replaces_pokemons(
     client: httpx.AsyncClient,
@@ -118,12 +116,11 @@ async def test_patch_user_replaces_pokemons(
         "pokemons": ["mewtwo"],
     }
 
-    persisted = await client.get(
-        f"/users/{created['id']}"
-    )
+    persisted = await client.get(f"/users/{created['id']}")
 
     assert persisted.status_code == 200
     assert persisted.json() == response.json()
+
 
 @pytest.mark.parametrize(
     "payload",
@@ -158,12 +155,11 @@ async def test_patch_user_rejects_invalid_body(
 
     assert response.status_code == 422
 
-    unchanged = await client.get(
-        f"/users/{created['id']}"
-    )
+    unchanged = await client.get(f"/users/{created['id']}")
 
     assert unchanged.status_code == 200
     assert unchanged.json() == created
+
 
 async def test_get_user_by_email(
     client: httpx.AsyncClient,
@@ -187,6 +183,7 @@ async def test_get_user_by_email(
     assert response.status_code == 200
     assert response.json() == created_response.json()
 
+
 async def test_delete_user(
     client: httpx.AsyncClient,
 ) -> None:
@@ -202,18 +199,15 @@ async def test_delete_user(
 
     user_id = created_response.json()["id"]
 
-    response = await client.delete(
-        f"/users/{user_id}"
-    )
+    response = await client.delete(f"/users/{user_id}")
 
     assert response.status_code == 204
     assert response.content == b""
 
-    missing = await client.get(
-        f"/users/{user_id}"
-    )
+    missing = await client.get(f"/users/{user_id}")
 
     assert missing.status_code == 404
+
 
 @pytest.mark.parametrize("method", ["GET", "PATCH", "DELETE"])
 async def test_unknown_user_returns_404(
@@ -244,6 +238,7 @@ async def test_unknown_email_returns_404(
 
     assert response.status_code == 404
 
+
 async def test_create_duplicate_email_returns_409(
     client: httpx.AsyncClient,
     user_payload: dict,
@@ -265,6 +260,7 @@ async def test_create_duplicate_email_returns_409(
 
     assert listed.status_code == 200
     assert listed.json() == [first.json()]
+
 
 async def test_patch_cannot_use_another_users_email(
     client: httpx.AsyncClient,
@@ -298,12 +294,11 @@ async def test_patch_cannot_use_another_users_email(
 
     assert response.status_code == 409
 
-    unchanged = await client.get(
-        f"/users/{second_user['id']}"
-    )
+    unchanged = await client.get(f"/users/{second_user['id']}")
 
     assert unchanged.status_code == 200
     assert unchanged.json() == second_user
+
 
 async def test_patch_allows_keeping_own_email(
     client: httpx.AsyncClient,

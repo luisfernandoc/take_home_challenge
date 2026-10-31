@@ -39,9 +39,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         return JSONResponse(
             status_code=502,
-            content={
-                "detail": "PokéAPI no reconoce uno de los IDs consultados"
-            },
+            content={"detail": "PokéAPI no reconoce uno de los IDs consultados"},
         )
 
     @app.exception_handler(PokemonProviderUnavailableError)
@@ -51,7 +49,5 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         return JSONResponse(
             status_code=502,
-            content={
-                "detail": "No fue posible consultar PokéAPI"
-            },
+            content={"detail": "No fue posible consultar PokéAPI"},
         )
