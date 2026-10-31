@@ -33,6 +33,7 @@ module-root = ""
 [dependency-groups]
 dev = [
     "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.17.3",
 ]
 
@@ -55,3 +56,10 @@ select = [
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
