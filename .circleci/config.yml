@@ -1,17 +1,7 @@
 version: 2.1
+
 orbs:
   coveralls: coveralls/coveralls@2.2.6
-  jobs:
-    build:
-      docker:
-        - image: circleci/node:10.0.0
-          steps:
-            - checkout
-        - run:
-            command: npm install && make test-coverage
-            name: Install and Make
-        - coveralls/upload
-workflows: null
 
 jobs:
   quality-and-tests:
@@ -93,14 +83,17 @@ jobs:
           command: uv run --locked python -m tests.prepare_database
 
       - run:
-          name: Execute testing
+          name: Execute tests and generate coverage
           command: |
             mkdir -p test-results
             uv run --locked python -m pytest tests -v \
-              --junitxml=test-results/pytest.xml
+              --junitxml=test-results/pytest.xml \
               --cov=app \
               --cov-report=term \
               --cov-report=xml:coverage.xml
+
+      - coveralls/upload:
+          coverage_file: coverage.xml
 
       - store_test_results:
           path: test-results
