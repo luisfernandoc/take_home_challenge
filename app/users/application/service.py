@@ -8,6 +8,7 @@ from app.users.domain.entities import User
 from app.users.domain.exceptions import EmailAlreadyRegisteredError, UserNotFoundError
 from app.users.domain.repositories import UserRepository
 
+
 class UserService:
     def __init__(
         self,
@@ -29,9 +30,7 @@ class UserService:
         existing_user = self._repository.get_by_email(email)
 
         if existing_user is not None:
-            raise EmailAlreadyRegisteredError(
-                "El correo ya está registrado"
-            )
+            raise EmailAlreadyRegisteredError("El correo ya está registrado")
 
         ids = list(pokemon_ids) if pokemon_ids is not None else []
         names = self._resolve_pokemon_names(ids)
@@ -52,13 +51,13 @@ class UserService:
         )
 
     def get_user_by_id(self, user_id: UUID) -> User:
-            user = self._repository.get_by_id(user_id)
-    
-            if user is None:
-                raise UserNotFoundError("User not found.")
-    
-            return user
-    
+        user = self._repository.get_by_id(user_id)
+
+        if user is None:
+            raise UserNotFoundError("User not found.")
+
+        return user
+
     def get_user_by_email(self, email: str) -> User:
         user = self._repository.get_by_email(email)
 
@@ -81,15 +80,9 @@ class UserService:
             existing_user = self._repository.get_by_email(email)
 
             if existing_user is not None and existing_user.id != user.id:
-                raise EmailAlreadyRegisteredError(
-                    "El correo ya está registrado"
-                )
+                raise EmailAlreadyRegisteredError("El correo ya está registrado")
 
-        ids = (
-            list(pokemon_ids)
-            if pokemon_ids is not None
-            else list(user.pokemon_ids)
-        )
+        ids = list(pokemon_ids) if pokemon_ids is not None else list(user.pokemon_ids)
 
         names = self._resolve_pokemon_names(ids)
 
@@ -130,9 +123,7 @@ class UserService:
     def _build_user_result(self, user: User) -> UserResult:
         return UserResult(
             user=user,
-            pokemon_names=self._resolve_pokemon_names(
-                user.pokemon_ids
-            ),
+            pokemon_names=self._resolve_pokemon_names(user.pokemon_ids),
         )
 
     def _resolve_pokemon_names(
@@ -142,20 +133,10 @@ class UserService:
         if len(pokemon_ids) > 100:
             raise ValueError("No puedes asignar más de 100 Pokémon")
 
-        if any(
-            type(pokemon_id) is not int or pokemon_id <= 0
-            for pokemon_id in pokemon_ids
-        ):
-            raise ValueError(
-                "Los IDs de Pokémon deben ser enteros positivos"
-            )
+        if any(type(pokemon_id) is not int or pokemon_id <= 0 for pokemon_id in pokemon_ids):
+            raise ValueError("Los IDs de Pokémon deben ser enteros positivos")
 
         if len(pokemon_ids) != len(set(pokemon_ids)):
-            raise ValueError(
-                "La lista no puede contener IDs repetidos"
-            )
+            raise ValueError("La lista no puede contener IDs repetidos")
 
-        return [
-            self._pokemon_client.get_name_by_id(pokemon_id)
-            for pokemon_id in pokemon_ids
-        ]
+        return [self._pokemon_client.get_name_by_id(pokemon_id) for pokemon_id in pokemon_ids]

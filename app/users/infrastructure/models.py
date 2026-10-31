@@ -1,15 +1,15 @@
 from uuid import UUID
+
 from sqlalchemy import Integer, String, Text, UniqueConstraint, Uuid, text
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.infrastructure.database import Base
 
+
 class UserModel(Base):
     __tablename__ = "users"
-    __table_args__ = (
-        UniqueConstraint("email", name="uq_users_email"),
-    )
+    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
 
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True),

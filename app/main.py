@@ -11,8 +11,9 @@ from app.users.presentation.exception_handlers import (
     register_exception_handlers,
 )
 
+
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings = get_settings()
     with httpx.Client(
         base_url=settings.pokeapi_base_url,
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
 
         yield
+
 
 app = FastAPI(
     title="Take Home Challenge",

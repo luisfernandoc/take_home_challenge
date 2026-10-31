@@ -9,7 +9,6 @@ from app.users.infrastructure.password_hasher import (
     Argon2PasswordHasher,
 )
 
-
 pytestmark = pytest.mark.anyio
 
 
@@ -58,9 +57,7 @@ async def test_user_crud_with_postgresql(
     original_hash = stored.password_hash
 
     # Consultar mediante HTTP.
-    retrieved = await sql_client.get(
-        f"/users/{user_id}"
-    )
+    retrieved = await sql_client.get(f"/users/{user_id}")
 
     assert retrieved.status_code == 200
     assert retrieved.json() == created
@@ -86,16 +83,12 @@ async def test_user_crud_with_postgresql(
     assert stored.password_hash == original_hash
 
     # Eliminar mediante HTTP.
-    deleted = await sql_client.delete(
-        f"/users/{user_id}"
-    )
+    deleted = await sql_client.delete(f"/users/{user_id}")
 
     assert deleted.status_code == 204
     assert deleted.content == b""
 
-    missing = await sql_client.get(
-        f"/users/{user_id}"
-    )
+    missing = await sql_client.get(f"/users/{user_id}")
 
     assert missing.status_code == 404
 

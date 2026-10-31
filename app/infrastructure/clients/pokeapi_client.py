@@ -1,4 +1,5 @@
 from threading import Lock
+
 import httpx
 from cachetools import TTLCache
 
@@ -6,6 +7,7 @@ from app.users.application.exceptions import (
     PokemonNotFoundError,
     PokemonProviderUnavailableError,
 )
+
 
 class PokeApiClient:
     def __init__(self, http_client: httpx.Client) -> None:
@@ -24,18 +26,14 @@ class PokeApiClient:
             return cached_name
 
         try:
-            response = self._http_client.get(
-                f"pokemon/{pokemon_id}/"
-            )
+            response = self._http_client.get(f"pokemon/{pokemon_id}/")
         except httpx.RequestError as error:
             raise PokemonProviderUnavailableError(
                 "It was not possible to connect with PokeAPI"
             ) from error
 
         if response.status_code == 404:
-            raise PokemonNotFoundError(
-                f"Pokemon with ID {pokemon_id} does not exist."
-            )
+            raise PokemonNotFoundError(f"Pokemon with ID {pokemon_id} does not exist.")
 
         try:
             response.raise_for_status()
@@ -47,14 +45,10 @@ class PokeApiClient:
         try:
             data = response.json()
         except ValueError as error:
-            raise PokemonProviderUnavailableError(
-                "PokeAPI returned an invalid JSON"
-            ) from error
+            raise PokemonProviderUnavailableError("PokeAPI returned an invalid JSON") from error
 
         if not isinstance(data, dict):
-            raise PokemonProviderUnavailableError(
-                "PokeAPI returned an unexpected structure"
-            )
+            raise PokemonProviderUnavailableError("PokeAPI returned an unexpected structure")
 
         name = data.get("name")
 

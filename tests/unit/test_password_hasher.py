@@ -17,9 +17,7 @@ def test_hash_can_be_verified(
 def test_wrong_password_is_rejected(
     real_password_hasher: Argon2PasswordHasher,
 ) -> None:
-    hashed = real_password_hasher.hash(
-        "password-ficticia-de-prueba"
-    )
+    hashed = real_password_hasher.hash("password-ficticia-de-prueba")
 
     assert not real_password_hasher.verify(
         "otra-password",

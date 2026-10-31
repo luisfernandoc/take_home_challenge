@@ -1,6 +1,8 @@
 from typing import Protocol
 from uuid import UUID
+
 from app.users.domain.entities import User
+
 
 class UserRepository(Protocol):
     def save(self, user: User) -> None:

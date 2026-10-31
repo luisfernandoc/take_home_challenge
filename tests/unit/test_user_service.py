@@ -10,6 +10,7 @@ from app.users.application.service import UserService
 from app.users.domain.exceptions import EmailAlreadyRegisteredError
 from app.users.infrastructure.repositories import InMemoryUserRepository
 
+
 def test_create_user_stores_hash_and_pokemon_ids(
     service: UserService,
     repository: InMemoryUserRepository,
@@ -31,9 +32,8 @@ def test_create_user_stores_hash_and_pokemon_ids(
     assert stored_user.pokemon_ids == [1, 25]
     assert result.pokemon_names == ["bulbasaur", "pikachu"]
 
-    password_hasher.hash.assert_called_once_with(
-        "password-ficticia-de-prueba"
-    )
+    password_hasher.hash.assert_called_once_with("password-ficticia-de-prueba")
+
 
 def test_create_user_rejects_duplicate_email(
     service: UserService,
@@ -55,6 +55,7 @@ def test_create_user_rejects_duplicate_email(
 
     assert repository.list_all() == [original.user]
     assert password_hasher.hash.call_count == 1
+
 
 def test_update_name_preserves_password_and_pokemons(
     service: UserService,
@@ -80,6 +81,7 @@ def test_update_name_preserves_password_and_pokemons(
     assert stored_user.password_hash == original.user.password_hash
     assert stored_user.pokemon_ids == [25]
     assert updated.pokemon_names == ["pikachu"]
+
 
 @pytest.mark.parametrize(
     ("new_ids", "expected_names"),
@@ -113,6 +115,7 @@ def test_update_replaces_pokemon_assignments(
     assert stored_user.password_hash == original.user.password_hash
     assert updated.pokemon_names == expected_names
 
+
 @pytest.mark.parametrize(
     "error_type",
     [
@@ -127,9 +130,7 @@ def test_create_user_does_not_save_when_pokemon_lookup_fails(
     password_hasher: Mock,
     error_type: type[Exception],
 ) -> None:
-    pokemon_client.get_name_by_id.side_effect = error_type(
-        "Error simulado de PokéAPI"
-    )
+    pokemon_client.get_name_by_id.side_effect = error_type("Error simulado de PokéAPI")
 
     with pytest.raises(error_type):
         service.create_user(
@@ -141,6 +142,7 @@ def test_create_user_does_not_save_when_pokemon_lookup_fails(
 
     assert repository.list_all() == []
     password_hasher.hash.assert_not_called()
+
 
 @pytest.mark.parametrize(
     "error_type",
@@ -162,9 +164,7 @@ def test_update_user_preserves_data_when_pokemon_lookup_fails(
         pokemon_ids=[25],
     )
 
-    pokemon_client.get_name_by_id.side_effect = error_type(
-        "Error simulado de PokéAPI"
-    )
+    pokemon_client.get_name_by_id.side_effect = error_type("Error simulado de PokéAPI")
 
     with pytest.raises(error_type):
         service.update_user(

@@ -14,7 +14,6 @@ from app.users.presentation.schemas import (
     UserUpdate,
 )
 
-
 router = APIRouter(prefix="/users", tags=["Users"])
 
 UserServiceDependency = Annotated[

@@ -28,9 +28,7 @@ def test_get_name_builds_expected_request_and_uses_cache(
     request = handler.call_args.args[0]
 
     assert request.method == "GET"
-    assert str(request.url) == (
-        "https://pokeapi.test/api/v2/pokemon/25/"
-    )
+    assert str(request.url) == ("https://pokeapi.test/api/v2/pokemon/25/")
 
 
 def test_cache_keeps_names_separate_by_id(
@@ -68,9 +66,7 @@ def test_invalid_id_does_not_make_http_request(
 def test_404_becomes_pokemon_not_found(
     pokeapi_client_factory,
 ) -> None:
-    handler = Mock(
-        return_value=httpx.Response(404)
-    )
+    handler = Mock(return_value=httpx.Response(404))
     client = pokeapi_client_factory(handler)
 
     with pytest.raises(PokemonNotFoundError):
@@ -82,9 +78,7 @@ def test_other_http_errors_become_provider_unavailable(
     pokeapi_client_factory,
     status_code: int,
 ) -> None:
-    handler = Mock(
-        return_value=httpx.Response(status_code)
-    )
+    handler = Mock(return_value=httpx.Response(status_code))
     client = pokeapi_client_factory(handler)
 
     with pytest.raises(PokemonProviderUnavailableError):
