@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+coveralls: coveralls/coveralls@2.2.6
 
 jobs:
   quality-and-tests:
