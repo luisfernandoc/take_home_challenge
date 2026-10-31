@@ -1,6 +1,17 @@
 version: 2.1
 orbs:
-coveralls: coveralls/coveralls@2.2.6
+    coveralls: coveralls/coveralls@2.2.6
+    jobs:
+    build:
+      docker:
+        - image: circleci/node:10.0.0
+          steps:
+            - checkout
+        - run:
+            command: npm install && make test-coverage
+            name: Install and Make
+        - coveralls/upload
+workflows: null
 
 jobs:
   quality-and-tests:
@@ -25,27 +36,27 @@ jobs:
       - checkout
 
       - run:
-          name: Instalar uv
+          name: Install uv
           command: python -m pip install "uv==0.13.6"
 
       - run:
-          name: Instalar dependencias
+          name: Install dependencies
           command: uv sync --locked --python "$(command -v python)"
 
       - run:
-          name: Preparar archivo de testing
+          name: Prepare testing file
           command: cp .env.test.example .env.test
 
       - run:
-          name: Revisar lint
+          name: Check lint
           command: uv run --locked ruff check .
 
       - run:
-          name: Revisar formato
+          name: Check format
           command: uv run --locked ruff format --check .
 
       - run:
-          name: Esperar a PostgreSQL
+          name: Wait for PostgreSQL
           command: |
             uv run --locked python - <<'PY'
             import time
@@ -78,11 +89,11 @@ jobs:
             PY
 
       - run:
-          name: Aplicar migraciones de testing
+          name: Apply testing migrations
           command: uv run --locked python -m tests.prepare_database
 
       - run:
-          name: Ejecutar pruebas
+          name: Execute testing
           command: |
             mkdir -p test-results
             uv run --locked python -m pytest tests -v \
