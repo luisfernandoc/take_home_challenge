@@ -1,107 +1,119 @@
 # Take Home Challenge
+
 [![CircleCI](https://dl.circleci.com/status-badge/img/circleci/XDAqBGGy3hmP1bSiLaNrAs/WziQdkTEG5iipEvmUQMnZa/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/XDAqBGGy3hmP1bSiLaNrAs/WziQdkTEG5iipEvmUQMnZa/tree/main)
 [![Coverage Status](https://coveralls.io/repos/github/luisfernandoc/take_home_challenge/badge.svg?branch=main)](https://coveralls.io/github/luisfernandoc/take_home_challenge?branch=main)
 
-API de usuarios construida con Python 3.13 y FastAPI.
+A user management API built with Python 3.13 and FastAPI.
 
-Permite administrar usuarios y asignarles Pokémon mediante sus IDs.
-Los IDs se almacenan en PostgreSQL y sus nombres se obtienen de PokéAPI.
-Las contraseñas se almacenan como hashes Argon2 y no se exponen en las respuestas.
+Users can be assigned Pokémon using their IDs. These IDs are stored in
+PostgreSQL, while Pokémon names are retrieved from PokéAPI.
 
-## Tecnologías
+Passwords are stored as Argon2 hashes and are never included in API responses.
 
-- FastAPI y Pydantic
-- SQLAlchemy y PostgreSQL 17
+## Technologies
+
+- FastAPI and Pydantic
+- SQLAlchemy and PostgreSQL 17
 - Alembic
-- HTTPX y cachetools
-- pwdlib con Argon2
-- pytest y Ruff
-- uv, Docker y Docker Compose
+- HTTPX and cachetools
+- pwdlib with Argon2
+- pytest and Ruff
+- uv, Docker, and Docker Compose
 
-## Requisitos
+## Requirements
 
-Para ejecutar con contenedores:
+To run the application in containers:
 
-- Docker con Docker Compose
-- Bash para utilizar el script de arranque opcional
+- Docker with Docker Compose
+- Bash to use the optional startup script
 
-Para desarrollo y pruebas desde la computadora:
+For local development and testing:
 
 - Python 3.13
 - uv
-- Docker para PostgreSQL
+- Docker to run PostgreSQL
 
-## Configuración
+## Configuration
 
-Copia los archivos de ejemplo y ajusta sus valores:
+Copy the example environment files and adjust their values:
 
 ```bash
 cp .env.example .env
 cp .env.test.example .env.test
 ```
 
-En PowerShell:
+In PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 Copy-Item .env.test.example .env.test
 ```
 
-No sobrescribas archivos de configuración existentes sin revisar sus valores.
+Review existing configuration files before overwriting them.
 
-| Variable | Descripción |
+| Variable | Description |
 |---|---|
-| POSTGRES_DB | Nombre de la base de datos |
-| POSTGRES_USER | Usuario de PostgreSQL |
-| POSTGRES_PASSWORD | Contraseña de PostgreSQL |
-| POSTGRES_HOST | Host de PostgreSQL |
-| POSTGRES_PORT | Puerto de PostgreSQL |
-| POKEAPI_BASE_URL | URL base de PokéAPI, con `/` final |
+| POSTGRES_DB | Database name |
+| POSTGRES_USER | PostgreSQL username |
+| POSTGRES_PASSWORD | PostgreSQL password |
+| POSTGRES_HOST | PostgreSQL hostname |
+| POSTGRES_PORT | PostgreSQL port |
+| POKEAPI_BASE_URL | PokéAPI base URL, including a trailing `/` |
 
-Desde la computadora, desarrollo utiliza `localhost:5433` y testing
-`localhost:5434`. Dentro de Compose, la aplicación utiliza `db:5432`.
+When connecting from the host machine, development uses `localhost:5433`
+and testing uses `localhost:5434`. Inside Docker Compose, the application
+connects to `db:5432`.
 
-Los archivos `.env` y `.env.test` contienen configuración local y no se versionan.
+The `.env` and `.env.test` files contain local configuration and are
+excluded from version control.
 
-## Ejecución con Docker Compose
+## Running with Docker Compose
 
 ```bash
 docker compose up --build -d api
 ```
 
-Compose espera a que PostgreSQL esté saludable, aplica las migraciones
-y después inicia la API.
+Compose waits for PostgreSQL to become healthy, applies database migrations,
+and then starts the API.
 
-También puedes utilizar:
+Alternatively, use the startup script:
 
 ```bash
 bash scripts/start.sh
 ```
 
-Documentación interactiva:
+Interactive documentation:
 
-- Swagger: http://localhost:8000/docs
+- Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
-- OpenAPI: http://localhost:8000/openapi.json
+- OpenAPI schema: http://localhost:8000/openapi.json
 
-Consultar estado y logs:
+Check service status and logs:
 
 ```bash
 docker compose ps -a
 docker compose logs --tail=100 migrate api
 ```
 
-El servicio `migrate` debe terminar con código `0`.
+The `migrate` service should exit with code `0`.
 
-Para detener los servicios conservando los datos:
+Stop the services while preserving database data:
 
 ```bash
 docker compose down
 ```
 
-`docker compose down -v` elimina los volúmenes y sus datos.
+Running `docker compose down -v` also deletes the volumes and their data.
 
-## Desarrollo local
+## Local Development
+
+If the Compose API service is already using port 8000, stop it first:
+
+```bash
+docker compose stop api
+```
+
+Install dependencies, start PostgreSQL, apply migrations, and run the API:
 
 ```bash
 uv sync --locked
@@ -110,35 +122,29 @@ uv run alembic upgrade head
 uv run fastapi dev app/main.py
 ```
 
-Detén previamente la API de Compose si está utilizando el puerto 8000:
-
-```bash
-docker compose stop api
-```
-
 ## Endpoints
 
-| Método | Ruta | Descripción |
+| Method | Path | Description |
 |---|---|---|
-| POST | /users | Crear un usuario |
-| GET | /users | Listar usuarios |
-| GET | /users/by-email?email=... | Buscar por correo |
-| GET | /users/{user_id} | Buscar por identificador |
-| PATCH | /users/{user_id} | Actualizar parcialmente |
-| DELETE | /users/{user_id} | Eliminar un usuario |
+| POST | `/users` | Create a user |
+| GET | `/users` | List users |
+| GET | `/users/by-email?email=...` | Find a user by email |
+| GET | `/users/{user_id}` | Find a user by ID |
+| PATCH | `/users/{user_id}` | Partially update a user |
+| DELETE | `/users/{user_id}` | Delete a user |
 
-Ejemplo de creación:
+Example creation request:
 
 ```json
 {
   "name": "Luis",
   "email": "luis@example.com",
-  "password": "Ejemplo-de-prueba-2026!",
+  "password": "Example-test-password-2026!",
   "pokemon_ids": [1, 25]
 }
 ```
 
-Ejemplo de respuesta:
+Example response:
 
 ```json
 {
@@ -149,91 +155,93 @@ Ejemplo de respuesta:
 }
 ```
 
-En PATCH, omitir `pokemon_ids` conserva las asignaciones.
-Enviar `[]` elimina todas las asignaciones y enviar otra lista las reemplaza.
+For PATCH requests:
 
-Los cuerpos de PATCH vacíos y los campos enviados explícitamente como
-`null` se rechazan. El PATCH general no permite cambiar la contraseña.
+- Omitting `pokemon_ids` preserves existing assignments.
+- Sending `[]` removes all assignments.
+- Sending another list replaces the existing assignments.
 
-## Arquitectura
+Empty PATCH request bodies and explicitly provided `null` values are rejected.
+The general PATCH endpoint does not support password changes.
 
-El código se organiza por funcionalidad y separa responsabilidades:
+## Architecture
 
-- `domain`: entidad de usuario, contrato del repositorio y errores de dominio.
-- `application`: casos de uso y contratos de hashing y consulta de Pokémon.
-- `infrastructure`: modelos ORM, repositorios y adaptadores externos.
-- `presentation`: endpoints, esquemas HTTP, dependencias y manejo de errores.
+The code is organized by feature, with separate responsibilities:
 
-El servicio depende de contratos. Las dependencias conectan esos contratos
-con SQLAlchemy, Argon2 y el cliente de PokéAPI.
+- `domain`: user entity, repository contract, and domain exceptions.
+- `application`: use cases and contracts for password hashing and Pokémon lookups.
+- `infrastructure`: ORM models, repositories, and external adapters.
+- `presentation`: endpoints, HTTP schemas, dependencies, and exception handlers.
 
-El repositorio almacena IDs de Pokémon; no consulta servicios externos.
-El cliente de PokéAPI resuelve los nombres y mantiene una caché temporal
-en memoria, independiente por proceso.
+The service depends on contracts. Dependency providers connect those contracts
+to SQLAlchemy, Argon2, and the PokéAPI client.
 
-## Pruebas
+The repository stores Pokémon IDs and does not call external services.
+The PokéAPI client resolves names and maintains a temporary in-memory cache
+that is independent for each application process.
 
-Levanta PostgreSQL de testing:
+## Testing
+
+Start the testing PostgreSQL instance:
 
 ```bash
 docker compose --profile test up -d db_test
 ```
 
-Cuando esté saludable, ejecuta:
+Once the database is healthy, run:
 
 ```bash
 uv run python -m tests.prepare_database
 uv run python -m pytest tests -v
 ```
 
-Las fixtures SQL también aplican las migraciones pendientes.
+SQL fixtures also apply pending migrations.
 
-Las pruebas utilizan:
+The test suite uses:
 
-- Repositorio en memoria y mocks para el servicio.
-- Overrides de dependencias para pruebas HTTP.
-- PostgreSQL separado para integración SQL.
-- Transacciones exteriores y savepoints para revertir las escrituras.
-- MockTransport para probar el cliente HTTP sin internet.
-- Argon2 real para verificar el hashing.
+- An in-memory repository and mocks for service tests.
+- Dependency overrides for HTTP tests.
+- A separate PostgreSQL instance for SQL integration tests.
+- Outer transactions and savepoints to roll back test writes.
+- MockTransport to test the HTTP client without internet access.
+- The real Argon2 implementation to verify password hashing.
 
-## Lint y formato
+## Linting and Formatting
 
-Comprobar:
+Check code quality and formatting:
 
 ```bash
 uv run ruff check .
 uv run ruff format --check .
 ```
 
-Aplicar correcciones y formato:
+Apply automatic fixes and formatting:
 
 ```bash
 uv run ruff check . --fix
 uv run ruff format .
 ```
 
-## Migraciones
+## Migrations
 
-Después de modificar los modelos:
+After modifying the ORM models, generate a migration:
 
 ```bash
 uv run alembic revision --autogenerate -m "describe schema change"
 ```
 
-Revisa siempre el archivo generado antes de aplicarlo:
+Always review the generated migration before applying it:
 
 ```bash
 uv run alembic upgrade head
 ```
 
-## Alcance y limitaciones
+## Scope and Limitations
 
-- La API todavía no implementa autenticación ni autorización.
-- El listado de usuarios no tiene paginación.
-- Las respuestas de usuarios con Pokémon dependen de PokéAPI cuando
-  los nombres no están en caché.
-- Los correos se comparan según el comportamiento actual de la aplicación;
-  no se implementa una política general de comparación sin distinguir mayúsculas.
-- Las contraseñas se almacenan con hash, pero eso por sí solo no protege
-  el acceso a los endpoints.
+- Authentication and authorization are not implemented.
+- The user list endpoint does not support pagination.
+- User responses containing Pokémon depend on PokéAPI when names are not cached.
+- Email comparisons follow the application's current behavior; a comprehensive
+  case-insensitive comparison policy is not implemented.
+- Password hashing protects stored passwords, but does not restrict access
+  to API endpoints.
