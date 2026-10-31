@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
-    coveralls: coveralls/coveralls@2.2.6
-    jobs:
+  coveralls: coveralls/coveralls@2.2.6
+  jobs:
     build:
       docker:
         - image: circleci/node:10.0.0
@@ -98,6 +98,9 @@ jobs:
             mkdir -p test-results
             uv run --locked python -m pytest tests -v \
               --junitxml=test-results/pytest.xml
+              --cov=app \
+              --cov-report=term \
+              --cov-report=xml:coverage.xml
 
       - store_test_results:
           path: test-results
