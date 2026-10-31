@@ -1,0 +1,95 @@
+version: 2.1
+
+jobs:
+  quality-and-tests:
+    docker:
+      - image: cimg/python:3.13
+        environment:
+          POSTGRES_DB: take_home_challenge_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_HOST: "127.0.0.1"
+          POSTGRES_PORT: "5432"
+          POKEAPI_BASE_URL: "https://pokeapi.co/api/v2/"
+          UV_PYTHON_DOWNLOADS: "never"
+
+      - image: postgres:17
+        environment:
+          POSTGRES_DB: take_home_challenge_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: ci_test_password
+
+    steps:
+      - checkout
+
+      - run:
+          name: Instalar uv
+          command: python -m pip install "uv==0.13.6"
+
+      - run:
+          name: Instalar dependencias
+          command: uv sync --locked --python "$(command -v python)"
+
+      - run:
+          name: Preparar archivo de testing
+          command: cp .env.test.example .env.test
+
+      - run:
+          name: Revisar lint
+          command: uv run --locked ruff check .
+
+      - run:
+          name: Revisar formato
+          command: uv run --locked ruff format --check .
+
+      - run:
+          name: Esperar a PostgreSQL
+          command: |
+            uv run --locked python - <<'PY'
+            import time
+
+            import psycopg
+
+            from tests.config import get_test_settings
+
+            settings = get_test_settings()
+
+            for attempt in range(30):
+                try:
+                    with psycopg.connect(
+                        dbname=settings.postgres_db,
+                        user=settings.postgres_user,
+                        password=settings.postgres_password.get_secret_value(),
+                        host=settings.postgres_host,
+                        port=settings.postgres_port,
+                        connect_timeout=2,
+                    ) as connection:
+                        connection.execute("SELECT 1")
+                    print("PostgreSQL disponible")
+                    break
+                except psycopg.OperationalError:
+                    if attempt == 29:
+                        raise RuntimeError(
+                            "PostgreSQL no estuvo disponible a tiempo"
+                        ) from None
+                    time.sleep(1)
+            PY
+
+      - run:
+          name: Aplicar migraciones de testing
+          command: uv run --locked python -m tests.prepare_database
+
+      - run:
+          name: Ejecutar pruebas
+          command: |
+            mkdir -p test-results
+            uv run --locked python -m pytest tests -v \
+              --junitxml=test-results/pytest.xml
+
+      - store_test_results:
+          path: test-results
+
+workflows:
+  validate:
+    jobs:
+      - quality-and-tests
