@@ -10,6 +10,18 @@ PostgreSQL, while Pokémon names are retrieved from PokéAPI.
 
 Passwords are stored as Argon2 hashes and are never included in API responses.
 
+## Live Demo
+
+- [Swagger UI](https://take-home-challenge-1.onrender.com/docs)
+- [ReDoc](https://take-home-challenge-1.onrender.com/redoc)
+- [OpenAPI Schema](https://take-home-challenge-1.onrender.com/openapi.json)
+
+The API runs on Render's free tier and may take approximately one minute
+to respond after 15 minutes of inactivity.
+
+This is a public demo without authentication or authorization.
+Use fictional data only.
+
 ## Technologies
 
 - FastAPI and Pydantic
@@ -235,6 +247,18 @@ Always review the generated migration before applying it:
 ```bash
 uv run alembic upgrade head
 ```
+
+## Live Demo
+
+- [Swagger UI](https://take-home-challenge-1.onrender.com/docs)
+- [ReDoc](https://take-home-challenge-1.onrender.com/redoc)
+- [OpenAPI Schema](https://take-home-challenge-1.onrender.com/openapi.json)
+
+The API runs on Render's free tier and may take approximately one minute
+to respond after 15 minutes of inactivity.
+
+This is a public demo without authentication or authorization.
+Use fictional data only.
 
 ## Scope and Limitations
 
