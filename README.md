@@ -134,6 +134,42 @@ uv run alembic upgrade head
 uv run fastapi dev app/main.py
 ```
 
+## Sample Data
+
+After applying migrations, populate the configured database with demo users:
+
+```bash
+uv run python -m scripts.seed
+```
+
+The command creates two fictional users with Pokémon assignments.
+It skips existing email addresses without modifying their data.
+
+Passwords are randomly generated and stored only as Argon2 hashes.
+Seed data is optional and is not loaded automatically at startup.
+
+The command uses the application's configured database connection.
+
+### Seed the Deployed Neon Database
+
+From the project root, run this PowerShell script:
+
+```powershell
+.\scripts\seed-neon.ps1
+```
+
+The script prompts for the Neon connection URL using hidden input,
+temporarily sets `DATABASE_URL`, validates that the hostname belongs
+to Neon, and runs the seed command.
+
+The previous environment variable is restored afterward.
+Neither `.env` nor `.env.test` is modified.
+
+Use the connection URL for the intended demo database. Existing users
+with matching email addresses are skipped without modifying their data.
+
+Never commit the connection URL or database credentials.
+
 ## Endpoints
 
 | Method | Path | Description |
