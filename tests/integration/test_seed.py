@@ -30,9 +30,7 @@ def test_seed_is_idempotent_and_preserves_existing_data(
 
     assert seed.seed_users(db_session, password_hasher) == 1
 
-    user = db_session.scalar(
-        select(UserModel).where(UserModel.email == email)
-    )
+    user = db_session.scalar(select(UserModel).where(UserModel.email == email))
 
     assert user is not None
     assert user.pokemon_ids == [1, 25]

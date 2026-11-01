@@ -9,7 +9,6 @@ from app.users.application.password_hasher import PasswordHasher
 from app.users.infrastructure.models import UserModel
 from app.users.infrastructure.password_hasher import Argon2PasswordHasher
 
-
 SEED_USERS = (
     (
         "Demo Trainer One",
@@ -37,14 +36,10 @@ def seed_users(
                 id=uuid4(),
                 name=name,
                 email=email,
-                password_hash=password_hasher.hash(
-                    token_urlsafe(32)
-                ),
+                password_hash=password_hasher.hash(token_urlsafe(32)),
                 pokemon_ids=list(pokemon_ids),
             )
-            .on_conflict_do_nothing(
-                constraint="uq_users_email"
-            )
+            .on_conflict_do_nothing(constraint="uq_users_email")
             .returning(UserModel.id)
         )
 
