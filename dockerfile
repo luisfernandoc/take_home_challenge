@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --no-editable \
     --python /usr/local/bin/python
 
-COPY scripts/render-start.sh /app/scripts/render-start.sh
+COPY scripts ./scripts
     
 USER appuser
 
